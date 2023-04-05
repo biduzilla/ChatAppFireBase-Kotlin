@@ -17,7 +17,10 @@ import br.com.alura.orgs.extensions.vaiPara
 import br.com.alura.orgs.preferences.dataStore
 import br.com.alura.orgs.preferences.usuarioLogadoPreferences
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 
@@ -44,30 +47,36 @@ class ListaProdutosActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch {
-            produtoDao.buscaTodos().collect { produtos ->
-                adapter.atualiza(produtos)
-                launch {
-                    produtoDao.buscaTodos().collect { produtos ->
-                        adapter.atualiza(produtos)
-                    }
-                }
-
-                launch {
-                    dataStore.data.collect { preferences ->
-                        preferences[usuarioLogadoPreferences]?.let { usuarioId ->
-                            launch {
-                                usuarioDao.buscaPorId(usuarioId).collect {
-                                    Log.i("ListaProdutos", "onCreate: $it")
-                                }
-                            }
-                        } ?: vaiParaLogin()
-                    }
-                }
-
-
+            launch {
+                verificaUserLogado()
             }
         }
     }
+
+    private suspend fun verificaUserLogado() {
+        dataStore.data.collect { preferences ->
+            preferences[usuarioLogadoPreferences]?.let { usuarioId ->
+                buscaUser(usuarioId)
+            } ?: vaiParaLogin()
+        }
+    }
+
+    private fun buscaUser(usuarioId: String) {
+        lifecycleScope.launch {
+            usuarioDao.buscaPorId(usuarioId).firstOrNull()?.let {
+                launch {
+                    buscaProdutosUser()
+                }
+            }
+        }
+    }
+
+    private suspend fun buscaProdutosUser() {
+        produtoDao.buscaTodos().collect { produtos ->
+            adapter.atualiza(produtos)
+        }
+    }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_lista_produtos, menu)
@@ -79,13 +88,17 @@ class ListaProdutosActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.menu_sair -> {
                 lifecycleScope.launch {
-                    dataStore.edit { preferences ->
-                        preferences.remove(usuarioLogadoPreferences)
-                    }
+                    deslogarUser()
                 }
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private suspend fun deslogarUser() {
+        dataStore.edit { preferences ->
+            preferences.remove(usuarioLogadoPreferences)
+        }
     }
 
     private fun vaiParaLogin() {
