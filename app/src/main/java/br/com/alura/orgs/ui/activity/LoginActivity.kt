@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.lifecycleScope
 import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityLoginBinding
 import br.com.alura.orgs.extensions.vaiPara
+import br.com.alura.orgs.preferences.dataStore
+import br.com.alura.orgs.preferences.usuarioLogadoPreferences
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
@@ -35,9 +39,10 @@ class LoginActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 usuarioDao.auth(usuario, senha)?.let { usuario ->
-                    vaiPara(ListaProdutosActivity::class.java) {
-                        putExtra("CHAVE_USUARIO_ID", usuario.id)
+                    dataStore.edit { preferences ->
+                        preferences[usuarioLogadoPreferences] = usuario.id
                     }
+                    vaiPara(ListaProdutosActivity::class.java)
                 } ?: Toast.makeText(
                     this@LoginActivity,
                     "Falha na autenticação",
