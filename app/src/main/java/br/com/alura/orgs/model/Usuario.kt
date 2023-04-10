@@ -6,9 +6,10 @@ import androidx.room.PrimaryKey
 import kotlinx.android.parcel.Parcelize
 
 @Entity
+
 data class Usuario(
     @PrimaryKey
     val id: String,
     val nome: String,
-    val senha: String
+    val senha: String,
 )
