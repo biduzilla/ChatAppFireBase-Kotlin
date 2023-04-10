@@ -19,4 +19,7 @@ interface ProdutoDao {
     @Query("SELECT * FROM Produto WHERE id = :id")
     fun buscaPorId(id: Long): Flow<Produto?>
 
+    @Query("SELECT * FROM Produto WHERE usuarioId=:usuarioId")
+    fun buscaTodosDoUsuario(usuarioId: String): Flow<List<Produto>>
+
 }
