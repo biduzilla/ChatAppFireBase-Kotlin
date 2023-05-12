@@ -14,11 +14,13 @@ import br.com.alura.ceep.databinding.ActivityListaNotasBinding
 import br.com.alura.ceep.extensions.vaiPara
 import br.com.alura.ceep.model.Nota
 import br.com.alura.ceep.ui.recyclerview.adapter.ListaNotasAdapter
+import br.com.alura.ceep.webClient.NotaWebClient
 import br.com.alura.ceep.webClient.RetrofitInicializador
 import br.com.alura.ceep.webClient.model.NotaResposta
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import retrofit2.Call
+import retrofit2.Callback
 import retrofit2.Response
 
 class ListaNotasActivity : AppCompatActivity() {
@@ -33,6 +35,10 @@ class ListaNotasActivity : AppCompatActivity() {
         AppDatabase.instancia(this).notaDao()
     }
 
+    private val webClient by lazy {
+        NotaWebClient()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -43,18 +49,41 @@ class ListaNotasActivity : AppCompatActivity() {
                 buscaNotas()
             }
         }
-        lifecycleScope.launch(IO) {
-            val call: Call<List<NotaResposta>> = RetrofitInicializador().notaService.buscaTodas()
-            val resposta: Response<List<NotaResposta>> = call.execute()
-            resposta.body()?.let { notasResposta ->
-                val notas:List<Nota> =  notasResposta.map {
-                    it.nota
-                }
-                Log.i("infoteste", "onCreate: $notas")
-            }
+        lifecycleScope.launch {
+            val notas = webClient.notaBuscaTodas()
+            Log.i("infoteste", "onCreate: $notas")
         }
+//        retrofitSemCoroutine()
+    }
 
-
+    private fun retrofitSemCoroutine() {
+        //        val call: Call<List<NotaResposta>> = RetrofitInicializador().notaService.buscaTodas()
+        //        lifecycleScope.launch(IO) {
+        //            val resposta: Response<List<NotaResposta>> = call.execute()
+        //            resposta.body()?.let { notasResposta ->
+        //                val notas: List<Nota> = notasResposta.map {
+        //                    it.nota
+        //                }
+        //                Log.i("infoteste", "onCreate: $notas")
+        //            }
+        //        }
+        //        call.enqueue(object : Callback<List<NotaResposta>?> {
+        //            override fun onResponse(
+        //                call: Call<List<NotaResposta>?>,
+        //                response: Response<List<NotaResposta>?>
+        //            ) {
+        //                response.body()?.let { notasResposta ->
+        //                    val notas: List<Nota> = notasResposta.map {
+        //                        it.nota
+        //                    }
+        //                    Log.i("infoteste", "onCreate: $notas")
+        //                }
+        //            }
+        //
+        //            override fun onFailure(call: Call<List<NotaResposta>?>, t: Throwable) {
+        //                Log.e("infoteste", "onFailure: ", t)
+        //            }
+        //        })
     }
 
     private fun configuraFab() {
