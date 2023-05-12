@@ -63,4 +63,9 @@ dependencies {
 
     //https://square.github.io/retrofit/
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+
+    //https://square.github.io/retrofit/
+    implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
+
+
 }
