@@ -2,6 +2,7 @@ package br.com.alura.ceep.webClient
 
 import android.util.Log
 import br.com.alura.ceep.model.Nota
+import br.com.alura.ceep.webClient.model.NotaRequisicao
 import br.com.alura.ceep.webClient.services.NotasService
 
 class NotaWebClient {
@@ -18,5 +19,23 @@ class NotaWebClient {
             null
         }
 
+    }
+
+    suspend fun salvar(nota: Nota) {
+        try {
+            val resposta = notaService.salvar(
+                nota.id,
+                NotaRequisicao(titulo = nota.titulo, descricao = nota.descricao, imagem = nota.imagem?:"")
+            )
+
+            if (resposta.isSuccessful){
+                Log.i("infoteste", "Nota Salva")
+            }else{
+                Log.i("infoteste", "Nota não Salva")
+            }
+        } catch (e: Exception) {
+            Log.e("infoteste", "Falha ao tentar salvar", e)
+            e.printStackTrace()
+        }
     }
 }
