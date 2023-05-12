@@ -13,6 +13,7 @@ import br.com.alura.ceep.database.AppDatabase
 import br.com.alura.ceep.databinding.ActivityListaNotasBinding
 import br.com.alura.ceep.extensions.vaiPara
 import br.com.alura.ceep.model.Nota
+import br.com.alura.ceep.repository.NotaRepository
 import br.com.alura.ceep.ui.recyclerview.adapter.ListaNotasAdapter
 import br.com.alura.ceep.webClient.NotaWebClient
 import br.com.alura.ceep.webClient.RetrofitInicializador
@@ -39,21 +40,33 @@ class ListaNotasActivity : AppCompatActivity() {
         NotaWebClient()
     }
 
+    private val repository by lazy {
+        NotaRepository(AppDatabase.instancia(this).notaDao(), NotaWebClient())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         configuraFab()
         configuraRecyclerView()
         lifecycleScope.launch {
+            //Não espera terminar para busca as notas
+            launch {
+                atualizaTodas()
+            }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 buscaNotas()
             }
         }
-        lifecycleScope.launch {
-            val notas = webClient.notaBuscaTodas()
-            Log.i("infoteste", "onCreate: $notas")
-        }
+//        lifecycleScope.launch {
+//            val notas = webClient.notaBuscaTodas()
+//            Log.i("infoteste", "onCreate: $notas")
+//        }
 //        retrofitSemCoroutine()
+    }
+
+    private suspend fun atualizaTodas() {
+        repository.atualizaTodas()
     }
 
     private fun retrofitSemCoroutine() {
@@ -104,7 +117,7 @@ class ListaNotasActivity : AppCompatActivity() {
     }
 
     private suspend fun buscaNotas() {
-        dao.buscaTodas()
+        repository.buscaTodas()
             .collect { notasEncontradas ->
                 binding.activityListaNotasMensagemSemNotas.visibility =
                     if (notasEncontradas.isEmpty()) {
